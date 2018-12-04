@@ -60,7 +60,7 @@ type ExponentialBackoff struct {
 // error it will be retired. It the number of attempts from the ExponentialBackoff is exceeded the final error
 // the func returns will be returned.
 //
-//This function makes use of closures so an variables you  would like to capture should be declared outside the
+// This function makes use of closures so any variables you would like to capture should be declared outside the
 // invocation of this method.
 func It(b *ExponentialBackoff, fn func() error) (err error) {
 	b.mutex.Do(b.validate)

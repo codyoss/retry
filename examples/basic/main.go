@@ -6,7 +6,7 @@ import (
 	"github.com/codyoss/retry"
 )
 
-func squareIfInputIsThreeGenerator() func() int {
+func squareOnThirdAttemptGenerator() func() int {
 	attempt := 1
 	return func() int {
 		if attempt != 3 {
@@ -18,16 +18,16 @@ func squareIfInputIsThreeGenerator() func() int {
 }
 
 func main() {
-	squareIfInputIsThree := squareIfInputIsThreeGenerator()
+	squareOnThirdAttempt := squareOnThirdAttemptGenerator()
 
 	var result int
 	retry.It(retry.DefaultExponentialBackoff, func() (err error) {
-		result = squareIfInputIsThree()
+		result = squareOnThirdAttempt()
 		if result == 0 {
 			return retry.Me
 		}
 		return
 	})
 	fmt.Println(result)
-	//Output: 9
+	// Output: 9
 }
