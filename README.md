@@ -8,83 +8,63 @@ It has:
 - sane defaults
 - validation logic to catch errors and optimize allocations
 - a thread safe model
-- a fun syntax(at least I think soo :laughing:)
+- a fun ergonomic syntax(at least I think soo :laughing:)
+
+## Installation
+
+```
+go get github.com/codyoss/retry
+```
 
 ## Examples
 
 An example calling a function that does not return an error:
 
 ```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/codyoss/retry"
-)
-
-func squareOnThirdAttemptGenerator() func() int {
-    attempt := 1
-    return func() int {
-        if attempt != 3 {
-            attempt++
-            return 0
-        }
-        return attempt * attempt
+var result int
+retry.It(retry.DefaultExponentialBackoff, func() (err error) {
+    result = squareOnThirdAttempt()
+    if result == 0 {
+        return retry.Me
     }
-}
-
-func main() {
-    squareOnThirdAttempt := squareOnThirdAttemptGenerator()
-
-    var result int
-    retry.It(retry.DefaultExponentialBackoff, func() (err error) {
-        result = squareOnThirdAttempt()
-        if result == 0 {
-            return retry.Me
-        }
-        return
-    })
-    fmt.Println(result)
-    //Output: 9
-}
+    return
+})
+fmt.Println(result)
+//Output: 9
 ```
 
-An example calling a function that returns an error
+An example calling a function that returns an error:
 
 ```go
-package main
-
-import (
-    "errors"
-    "fmt"
-
-    "github.com/codyoss/retry"
-)
-
-func squareOnThirdAttemptGenerator() func() (int, error) {
-    attempt := 1
-    return func() (int, error) {
-        if attempt != 3 {
-            attempt++
-            return 0, errors.New("uh oh")
-        }
-        return attempt * attempt, nil
-    }
-}
-
-func main() {
-    squareOnThirdAttempt := squareOnThirdAttemptGenerator()
-
-    var result int
-    retry.It(retry.DefaultExponentialBackoff, func() (err error) {
-        result, err = squareOnThirdAttempt()
-        return
-    })
-    fmt.Println(result)
-    // Output: 9
-}
+var result int
+retry.It(retry.DefaultExponentialBackoff, func() (err error) {
+    result, err = squareOnThirdAttempt()
+    return
+})
+fmt.Println(result)
+// Output: 9
 ```
+
+An example of what happens when retries are exceeded:
+
+```go
+// Create your own retry policy. It can be used across goroutines safely.
+b := &retry.ExponentialBackoff{
+    Attempts:     5,
+    InitialDelay: 0 * time.Millisecond,
+}
+attempt := 0
+
+// final error will be returned if retries are exceeded
+err := retry.It(b, func() error {
+    attempt++
+    return fmt.Errorf("I failed %d times 😢", attempt)
+})
+fmt.Println(err)
+// Output: I failed 5 times 😢
+```
+
+For full examples see [the examples folder](examples/)
 
 ## TODOs
 
