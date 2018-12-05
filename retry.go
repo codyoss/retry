@@ -36,7 +36,8 @@ var (
 	Me = errors.New("Retry me")
 )
 
-// ExponentialBackoff holds the configuration of a backoff policy.
+// ExponentialBackoff holds the configuration of a backoff policy. Once values are set and this backoff is used any
+// modification to this struct will not affect behavior. Fields get frozen to un-exported variables upon first use.
 type ExponentialBackoff struct {
 	// Attempts it the max number of times a function will be retried. Will always be treaded as a value >= 1.
 	Attempts int
@@ -54,6 +55,13 @@ type ExponentialBackoff struct {
 
 	mutex      sync.Once
 	skipJitter bool
+
+	// Frozen fields
+	attempts     int
+	initialDelay time.Duration
+	maxDelay     time.Duration
+	factor       float64
+	jitter       float64
 }
 
 // It takes an ExponentialBackoff and a func that returns an err. If the function passed to this method returns an
@@ -63,19 +71,19 @@ type ExponentialBackoff struct {
 // This function makes use of closures so any variables you would like to capture should be declared outside the
 // invocation of this method.
 func It(b *ExponentialBackoff, fn func() error) (err error) {
-	b.mutex.Do(b.validate)
+	b.mutex.Do(b.validateAndFreeze)
 
-	delay := b.InitialDelay
-	for i := 0; i < b.Attempts; i++ {
+	delay := b.initialDelay
+	for i := 0; i < b.attempts; i++ {
 		if i != 0 {
 			time.Sleep(delay)
 
-			delay = time.Duration(float64(delay) * b.Factor)
-			if delay > b.MaxDelay {
-				delay = b.MaxDelay
+			delay = time.Duration(float64(delay) * b.factor)
+			if delay > b.maxDelay {
+				delay = b.maxDelay
 			}
 			if !b.skipJitter {
-				delta := b.Jitter * float64(delay)
+				delta := b.jitter * float64(delay)
 				minDelay := float64(delay) - delta
 				maxDelay := float64(delay) + delta
 				delay = time.Duration(minDelay + (rand.Float64() * (maxDelay - minDelay + 1)))
@@ -89,9 +97,13 @@ func It(b *ExponentialBackoff, fn func() error) (err error) {
 	return
 }
 
-func (b *ExponentialBackoff) validate() {
+func (b *ExponentialBackoff) validateAndFreeze() {
+	// validation
 	if b.Attempts < 1 {
 		b.Attempts = 1
+	}
+	if b.InitialDelay < 0 {
+		b.InitialDelay = 0
 	}
 	if b.MaxDelay == 0 {
 		b.MaxDelay = Forever
@@ -105,5 +117,12 @@ func (b *ExponentialBackoff) validate() {
 	if b.Jitter == 0 {
 		b.skipJitter = true
 	}
+
+	// freeze
 	rand.Seed(time.Now().Unix())
+	b.attempts = b.Attempts
+	b.initialDelay = b.InitialDelay
+	b.maxDelay = b.MaxDelay
+	b.factor = b.Factor
+	b.jitter = b.Jitter
 }
