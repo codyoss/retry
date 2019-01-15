@@ -2,6 +2,7 @@
 package retry
 
 import (
+	"context"
 	"errors"
 	"math/rand"
 	"sync"
@@ -33,7 +34,7 @@ var (
 
 	// Me is an error that can be returned in from a function. To be used in the function passed to It if no other
 	// error makes sense or if you don't care to return that actual error. This is error variable is simply sugar.
-	Me = errors.New("Retry me")
+	Me = errors.New("retry me")
 )
 
 // ExponentialBackoff holds the configuration of a backoff policy. Once values are set and this backoff is used any
@@ -90,6 +91,40 @@ func It(b *ExponentialBackoff, fn func() error) (err error) {
 			}
 		}
 		err = fn()
+		if err == nil {
+			return
+		}
+	}
+	return
+}
+
+// ItContext is a the same as `It` but context aware. This methods can be used to set an overall timeout. It will also
+// pass the provided context to the function provided. Thus, any code you call within the retry block can share the
+// same parent context.
+func ItContext(ctx context.Context, b *ExponentialBackoff, fn func(context.Context) error) (err error) {
+	b.mutex.Do(b.validateAndFreeze)
+
+	delay := b.initialDelay
+	for i := 0; i < b.attempts; i++ {
+		if i != 0 {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(delay):
+			}
+
+			delay = time.Duration(float64(delay) * b.factor)
+			if delay > b.maxDelay {
+				delay = b.maxDelay
+			}
+			if !b.skipJitter {
+				delta := b.jitter * float64(delay)
+				minDelay := float64(delay) - delta
+				maxDelay := float64(delay) + delta
+				delay = time.Duration(minDelay + (rand.Float64() * (maxDelay - minDelay + 1)))
+			}
+		}
+		err = fn(ctx)
 		if err == nil {
 			return
 		}

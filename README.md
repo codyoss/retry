@@ -4,15 +4,16 @@ retry is a package that enables retrying code.
 
 It has:
 
-- a simple api(currently one public method)
+- a simple api, only two public functions
 - sane defaults
 - validation logic to catch errors and optimize allocations
 - a thread safe model
+- support for `context.Context`
 - a fun ergonomic syntax(at least I think soo :laughing:)
 
 ## Installation
 
-```
+```bash
 go get github.com/codyoss/retry
 ```
 
@@ -64,14 +65,24 @@ fmt.Println(err)
 // Output: I failed 5 times 😢
 ```
 
-For full examples see [the examples folder](examples/)
+### retry.ItContext
 
-## TODOs
+retry also supports calling code that is context aware via `retry.ItContext`
 
-- Add one more method that supports a passed in context
-- take some feedback
+```go
+noopFn := func(ctx context.Context) {}
 
-## Disclaimer
+// can you use the context to set a max amount time to retry for
+ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+defer cancel()
 
-Until this api hits v0.1.0 it might change a bit. After that I will try to keep things rather stable. After I have
-gotten enough feedback I will v1.0.0 and make the same promise Go does. Cheers!
+err := retry.ItContext(ctx, retry.DefaultConstantDelay, func(ctx context.Context) (err error) {
+    noopFn(ctx)
+    return retry.Me
+})
+
+fmt.Printf("%v\n", err)
+// Output: context deadline exceeded
+```
+
+For full examples with more documentation see [the examples folder](examples/)
