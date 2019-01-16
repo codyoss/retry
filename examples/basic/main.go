@@ -21,7 +21,7 @@ func main() {
 	squareOnThirdAttempt := squareOnThirdAttemptGenerator()
 
 	var result int
-	retry.It(retry.DefaultExponentialBackoff, func() (err error) {
+	retry.It(retry.ExponentialBackoff, func() (err error) {
 		// Put code you would like to retry here. If you return an error and have not exceeded retries the code in
 		// in this block will be executed again based on the backoff policy provided.
 		result = squareOnThirdAttempt()

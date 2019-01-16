@@ -17,7 +17,7 @@ func failingCodeGenerator() func() error {
 
 func main() {
 	// Create your own retry policy. It can be used across goroutines safely.
-	b := &retry.ExponentialBackoff{
+	b := &retry.Backoff{
 		Attempts:     5,
 		InitialDelay: 0 * time.Millisecond,
 	}

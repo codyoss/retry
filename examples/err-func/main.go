@@ -22,7 +22,7 @@ func main() {
 	squareOnThirdAttempt := squareOnThirdAttemptGenerator()
 
 	var result int
-	retry.It(retry.DefaultConstantDelay, func() (err error) {
+	retry.It(retry.ConstantDelay, func() (err error) {
 		result, err = squareOnThirdAttempt()
 		return
 	})

@@ -12,7 +12,7 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 	factor := 1.0
 	jitter := 1.0
 
-	b := &ExponentialBackoff{
+	b := &Backoff{
 		Attempts:     attempts,
 		InitialDelay: initialDelay,
 		MaxDelay:     maxDelay,

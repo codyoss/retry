@@ -24,13 +24,13 @@ func aFunctionThatWorksAfterCalledThreeTimes() func() (string, error) {
 func TestIt(t *testing.T) {
 	tests := []struct {
 		name    string
-		backoff *retry.ExponentialBackoff
+		backoff *retry.Backoff
 		want    string
 		wantErr error
 	}{
-		{"works", &retry.ExponentialBackoff{Attempts: 3, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "It Worked", nil},
-		{"not work, no retries", &retry.ExponentialBackoff{Attempts: 1, Factor: 1.0, InitialDelay: 500 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "", retry.Me},
-		{"not work, one retry", &retry.ExponentialBackoff{Attempts: 2, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "", retry.Me},
+		{"works", &retry.Backoff{Attempts: 3, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "It Worked", nil},
+		{"not work, no retries", &retry.Backoff{Attempts: 1, Factor: 1.0, InitialDelay: 500 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "", retry.Me},
+		{"not work, one retry", &retry.Backoff{Attempts: 2, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "", retry.Me},
 	}
 
 	for _, tt := range tests {
@@ -59,15 +59,15 @@ func TestIt(t *testing.T) {
 func TestItContext(t *testing.T) {
 	tests := []struct {
 		name     string
-		backoff  *retry.ExponentialBackoff
+		backoff  *retry.Backoff
 		deadline time.Duration
 		want     string
 		wantErr  error
 	}{
-		{"works", &retry.ExponentialBackoff{Attempts: 3, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "It Worked", nil},
-		{"not work, no retries", &retry.ExponentialBackoff{Attempts: 1, Factor: 1.0, InitialDelay: 500 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "", retry.Me},
-		{"not work, one retry", &retry.ExponentialBackoff{Attempts: 2, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "", retry.Me},
-		{"not work, deadline exceeded", retry.DefaultExponentialBackoff, 10 * time.Millisecond, "", context.DeadlineExceeded},
+		{"works", &retry.Backoff{Attempts: 3, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "It Worked", nil},
+		{"not work, no retries", &retry.Backoff{Attempts: 1, Factor: 1.0, InitialDelay: 500 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "", retry.Me},
+		{"not work, one retry", &retry.Backoff{Attempts: 2, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "", retry.Me},
+		{"not work, deadline exceeded", retry.ExponentialBackoff, 10 * time.Millisecond, "", context.DeadlineExceeded},
 	}
 
 	for _, tt := range tests {
@@ -99,7 +99,7 @@ func TestItContextWhenContextCanceled(t *testing.T) {
 	fn := func(ctx context.Context) { return }
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	err := retry.ItContext(ctx, retry.DefaultExponentialBackoff, func(ctx context.Context) (err error) {
+	err := retry.ItContext(ctx, retry.ExponentialBackoff, func(ctx context.Context) (err error) {
 		fn(ctx)
 		cancel()
 		return retry.Me

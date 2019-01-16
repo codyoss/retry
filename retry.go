@@ -16,15 +16,15 @@ const (
 )
 
 var (
-	// DefaultConstantDelay is a backoff policy that will attempt a call 5 times with 500 milliseconds between
+	// ConstantDelay is a backoff policy that will attempt a call 5 times with 500 milliseconds between
 	// subsequent calls.
-	DefaultConstantDelay = &ExponentialBackoff{
+	ConstantDelay = &Backoff{
 		Attempts:     5,
 		InitialDelay: 500 * time.Millisecond,
 		Factor:       1,
 	}
-	// DefaultExponentialBackoff provides a sane exponential backoff policy.
-	DefaultExponentialBackoff = &ExponentialBackoff{
+	// ExponentialBackoff provides a, sane, default exponential backoff policy.
+	ExponentialBackoff = &Backoff{
 		Attempts:     5,
 		InitialDelay: 500 * time.Millisecond,
 		MaxDelay:     8 * time.Second,
@@ -37,9 +37,9 @@ var (
 	Me = errors.New("retry me")
 )
 
-// ExponentialBackoff holds the configuration of a backoff policy. Once values are set and this backoff is used any
+// Backoff holds the configuration of a backoff policy. Once values are set and this backoff is used any
 // modification to this struct will not affect behavior. Fields get frozen to un-exported variables upon first use.
-type ExponentialBackoff struct {
+type Backoff struct {
 	// Attempts it the max number of times a function will be retried. Will always be treaded as a value >= 1.
 	Attempts int
 	// InitialDelay is the starting delay should the first attempt fail.
@@ -51,7 +51,7 @@ type ExponentialBackoff struct {
 	Factor float64
 	// Jitter is a way to add a bit of randomness into your delay. Setting this value helps avoid what is known as the
 	// thundering herd problem. For example if a value of .1 is set and your delay is 500 milliseconds the Jitter would
-	// tranform that value into a number between 490 and 510 milliseconds.
+	// transform that value into a number between 490 and 510 milliseconds.
 	Jitter float64
 
 	mutex      sync.Once
@@ -71,7 +71,7 @@ type ExponentialBackoff struct {
 //
 // This function makes use of closures so any variables you would like to capture should be declared outside the
 // invocation of this method.
-func It(b *ExponentialBackoff, fn func() error) (err error) {
+func It(b *Backoff, fn func() error) (err error) {
 	b.mutex.Do(b.validateAndFreeze)
 
 	delay := b.initialDelay
@@ -101,7 +101,7 @@ func It(b *ExponentialBackoff, fn func() error) (err error) {
 // ItContext is a the same as `It` but context aware. This methods can be used to set an overall timeout. It will also
 // pass the provided context to the function provided. Thus, any code you call within the retry block can share the
 // same parent context.
-func ItContext(ctx context.Context, b *ExponentialBackoff, fn func(context.Context) error) (err error) {
+func ItContext(ctx context.Context, b *Backoff, fn func(context.Context) error) (err error) {
 	b.mutex.Do(b.validateAndFreeze)
 
 	delay := b.initialDelay
@@ -132,7 +132,7 @@ func ItContext(ctx context.Context, b *ExponentialBackoff, fn func(context.Conte
 	return
 }
 
-func (b *ExponentialBackoff) validateAndFreeze() {
+func (b *Backoff) validateAndFreeze() {
 	// validation
 	if b.Attempts < 1 {
 		b.Attempts = 1
