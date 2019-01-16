@@ -3,6 +3,8 @@
 retry is a package that enables retrying code.
 
 [![GoDoc](https://godoc.org/github.com/codyoss/retry?status.svg)](https://godoc.org/github.com/codyoss/retry)
+[![Build Status](https://cloud.drone.io/api/badges/codyoss/retry/status.svg)](https://cloud.drone.io/codyoss/retry)
+[![codecov](https://codecov.io/gh/codyoss/retry/branch/master/graph/badge.svg)](https://codecov.io/gh/codyoss/retry)
 [![Go Report Card](https://goreportcard.com/badge/github.com/codyoss/retry)](https://goreportcard.com/report/github.com/codyoss/retry)
 
 It has:

@@ -42,3 +42,32 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 		t.Error("public fields should change, private should have been frozen")
 	}
 }
+
+func TestFreezeBackoffWithBadInputs(t *testing.T) {
+	attempts := -1
+	initialDelay := -1 * time.Millisecond
+	maxDelay := 0 * time.Millisecond
+	factor := 0.0
+	jitter := -1.0
+
+	b := &Backoff{
+		Attempts:     attempts,
+		InitialDelay: initialDelay,
+		MaxDelay:     maxDelay,
+		Factor:       factor,
+		Jitter:       jitter,
+	}
+
+	It(b, func() error {
+		return nil
+	})
+
+	if b.attempts != 1 ||
+		b.initialDelay != 0 ||
+		b.maxDelay != Forever ||
+		b.factor != 1 ||
+		b.jitter != 0 ||
+		b.skipJitter != true {
+		t.Error("public fields should change, private should have been frozen")
+	}
+}

@@ -29,6 +29,7 @@ func TestIt(t *testing.T) {
 		wantErr error
 	}{
 		{"works", &retry.Backoff{Attempts: 3, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "It Worked", nil},
+		{"works, uses maxDelay", &retry.Backoff{Attempts: 3, Factor: 2.0, InitialDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond, Jitter: .1}, "It Worked", nil},
 		{"not work, no retries", &retry.Backoff{Attempts: 1, Factor: 1.0, InitialDelay: 500 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "", retry.Me},
 		{"not work, one retry", &retry.Backoff{Attempts: 2, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, "", retry.Me},
 	}
@@ -65,6 +66,7 @@ func TestItContext(t *testing.T) {
 		wantErr  error
 	}{
 		{"works", &retry.Backoff{Attempts: 3, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "It Worked", nil},
+		{"works, uses maxDelay", &retry.Backoff{Attempts: 3, Factor: 2.0, InitialDelay: 1 * time.Millisecond, MaxDelay: 2 * time.Millisecond, Jitter: .1}, 10 * time.Millisecond, "It Worked", nil},
 		{"not work, no retries", &retry.Backoff{Attempts: 1, Factor: 1.0, InitialDelay: 500 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "", retry.Me},
 		{"not work, one retry", &retry.Backoff{Attempts: 2, Factor: 1.0, InitialDelay: 1 * time.Millisecond, MaxDelay: retry.Forever, Jitter: .1}, 10 * time.Millisecond, "", retry.Me},
 		{"not work, deadline exceeded", retry.ExponentialBackoff, 10 * time.Millisecond, "", context.DeadlineExceeded},
