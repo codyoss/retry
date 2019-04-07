@@ -65,43 +65,17 @@ type Backoff struct {
 	jitter       float64
 }
 
-// It takes an ExponentialBackoff and a func that returns an err. If the function passed to this method returns an
-// error it will be retired. It the number of attempts from the ExponentialBackoff is exceeded the final error
-// the func returns will be returned.
+// It takes a context, an ExponentialBackoff, and a func that returns an err. If the function passed to this method
+// returns an error it will be retired. If the number of attempts, declared in ExponentialBackoff, is exceeded the
+// final error the func returns will be returned to the caller.
+//
+// The context passed into this method can act as an max timeout over all invocations. This is total time, it is not
+// reset should your code need to retry. The context will also passed into the function provided. Thus, any code you
+// call within the retry block can share the same parent context.
 //
 // This function makes use of closures so any variables you would like to capture should be declared outside the
 // invocation of this method.
-func It(b *Backoff, fn func() error) (err error) {
-	b.mutex.Do(b.validateAndFreeze)
-
-	delay := b.initialDelay
-	for i := 0; i < b.attempts; i++ {
-		if i != 0 {
-			time.Sleep(delay)
-
-			delay = time.Duration(float64(delay) * b.factor)
-			if delay > b.maxDelay {
-				delay = b.maxDelay
-			}
-			if !b.skipJitter {
-				delta := b.jitter * float64(delay)
-				minDelay := float64(delay) - delta
-				maxDelay := float64(delay) + delta
-				delay = time.Duration(minDelay + (rand.Float64() * (maxDelay - minDelay + 1)))
-			}
-		}
-		err = fn()
-		if err == nil {
-			return
-		}
-	}
-	return
-}
-
-// ItContext is a the same as `It` but context aware. This methods can be used to set an overall timeout. It will also
-// pass the provided context to the function provided. Thus, any code you call within the retry block can share the
-// same parent context.
-func ItContext(ctx context.Context, b *Backoff, fn func(context.Context) error) (err error) {
+func It(ctx context.Context, b *Backoff, fn func(context.Context) error) (err error) {
 	b.mutex.Do(b.validateAndFreeze)
 
 	delay := b.initialDelay
@@ -160,4 +134,9 @@ func (b *Backoff) validateAndFreeze() {
 	b.maxDelay = b.MaxDelay
 	b.factor = b.Factor
 	b.jitter = b.Jitter
+}
+
+// It is a convenience method to call the package level function It.
+func (b *Backoff) It(ctx context.Context, fn func(context.Context) error) (err error) {
+	return It(ctx, b, fn)
 }

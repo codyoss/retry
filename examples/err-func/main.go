@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -22,7 +23,7 @@ func main() {
 	squareOnThirdAttempt := squareOnThirdAttemptGenerator()
 
 	var result int
-	retry.It(retry.ConstantDelay, func() (err error) {
+	retry.It(context.Background(), retry.ConstantDelay, func(ctx context.Context) (err error) {
 		result, err = squareOnThirdAttempt()
 		return
 	})

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,14 +18,14 @@ func failingCodeGenerator() func() error {
 
 func main() {
 	// Create your own retry policy. It can be used across goroutines safely.
-	b := &retry.Backoff{
+	backoff := &retry.Backoff{
 		Attempts:     5,
 		InitialDelay: 0 * time.Millisecond,
 	}
 	failingCode := failingCodeGenerator()
 
 	// final error will be returned if retries are exceeded
-	err := retry.It(b, func() error {
+	err := backoff.It(context.Background(), func(ctx context.Context) error {
 		return failingCode()
 	})
 	fmt.Println(err)

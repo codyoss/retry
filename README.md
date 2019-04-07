@@ -9,7 +9,7 @@ retry is a package that enables retrying code.
 
 It has:
 
-- a simple api, only two public functions
+- a simple api, only one public function!
 - sane defaults
 - validation logic to catch errors and optimize allocations
 - a thread safe model
@@ -28,7 +28,25 @@ An example calling a function that does not return an error:
 
 ```go
 var result int
-retry.It(retry.ExponentialBackoff, func() (err error) {
+retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (err error) {
+    result = squareOnThirdAttempt()
+    if result == 0 {
+        return retry.Me
+    }
+    return
+})
+fmt.Println(result)
+//Output: 9
+```
+
+An alternate syntax that does the same thing as above:
+
+```go
+var result int
+// You could also create your own backoff policy
+backoff := retry.ExponentialBackoff
+// This just calls the package level It function under the hood.
+backoff.It(context.Background(), func(ctx context.Context) (err error) {
     result = squareOnThirdAttempt()
     if result == 0 {
         return retry.Me
@@ -43,7 +61,7 @@ An example calling a function that returns an error:
 
 ```go
 var result int
-retry.It(retry.ExponentialBackoff, func() (err error) {
+retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (err error) {
     result, err = squareOnThirdAttempt()
     return
 })
@@ -62,7 +80,7 @@ b := &retry.ExponentialBackoff{
 attempt := 0
 
 // final error will be returned if retries are exceeded
-err := retry.It(b, func() error {
+err := retry.It(context.Background(), b, func(ctx context.Context) error {
     attempt++
     return fmt.Errorf("I failed %d times 😢", attempt)
 })
@@ -70,9 +88,7 @@ fmt.Println(err)
 // Output: I failed 5 times 😢
 ```
 
-### retry.ItContext
-
-retry also supports calling code that is context aware via `retry.ItContext`
+retry also supports calling code that is context aware!
 
 ```go
 noopFn := func(ctx context.Context) {}
@@ -81,7 +97,8 @@ noopFn := func(ctx context.Context) {}
 ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 defer cancel()
 
-err := retry.ItContext(ctx, retry.ConstantDelay, func(ctx context.Context) (err error) {
+// the context passed in is forwarded to the function provided
+err := retry.It(ctx, retry.ConstantDelay, func(ctx context.Context) (err error) {
     noopFn(ctx)
     return retry.Me
 })

@@ -1,6 +1,7 @@
 package retry
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -20,7 +21,7 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 		Jitter:       jitter,
 	}
 
-	It(b, func() error {
+	It(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
 
@@ -30,7 +31,7 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 	b.Factor = 7.0
 	b.Jitter = 7.0
 
-	It(b, func() error {
+	It(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
 
@@ -58,7 +59,7 @@ func TestFreezeBackoffWithBadInputs(t *testing.T) {
 		Jitter:       jitter,
 	}
 
-	It(b, func() error {
+	It(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
 
