@@ -21,9 +21,12 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 		Jitter:       jitter,
 	}
 
-	Run(context.Background(), b, func(ctx context.Context) error {
+	err := Run(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 
 	b.Attempts = 7
 	b.InitialDelay = 7 * time.Millisecond
@@ -31,9 +34,12 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 	b.Factor = 7.0
 	b.Jitter = 7.0
 
-	Run(context.Background(), b, func(ctx context.Context) error {
+	err = Run(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 
 	if b.Attempts != 7 || b.attempts != attempts ||
 		b.InitialDelay != 7*time.Millisecond || b.initialDelay != initialDelay ||
@@ -59,9 +65,12 @@ func TestFreezeBackoffWithBadInputs(t *testing.T) {
 		Jitter:       jitter,
 	}
 
-	Run(context.Background(), b, func(ctx context.Context) error {
+	err := Run(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 
 	if b.attempts != 1 ||
 		b.initialDelay != 0 ||

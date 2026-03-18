@@ -131,7 +131,6 @@ func (b *Backoff) validateAndFreeze() {
 	}
 
 	// freeze
-	rand.Seed(time.Now().Unix())
 	b.attempts = b.Attempts
 	b.initialDelay = b.InitialDelay
 	b.maxDelay = b.MaxDelay
