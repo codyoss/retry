@@ -21,7 +21,7 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 		Jitter:       jitter,
 	}
 
-	It(context.Background(), b, func(ctx context.Context) error {
+	Run(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
 
@@ -31,7 +31,7 @@ func TestFreezeBackoffAfterFirstUse(t *testing.T) {
 	b.Factor = 7.0
 	b.Jitter = 7.0
 
-	It(context.Background(), b, func(ctx context.Context) error {
+	Run(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
 
@@ -59,7 +59,7 @@ func TestFreezeBackoffWithBadInputs(t *testing.T) {
 		Jitter:       jitter,
 	}
 
-	It(context.Background(), b, func(ctx context.Context) error {
+	Run(context.Background(), b, func(ctx context.Context) error {
 		return nil
 	})
 

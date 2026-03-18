@@ -22,11 +22,12 @@ func squareOnThirdAttemptGenerator() func() (int, error) {
 func main() {
 	squareOnThirdAttempt := squareOnThirdAttemptGenerator()
 
-	var result int
-	retry.It(context.Background(), retry.ConstantDelay, func(ctx context.Context) (err error) {
-		result, err = squareOnThirdAttempt()
-		return
+	result, err := retry.It(context.Background(), retry.ConstantDelay, func(ctx context.Context) (int, error) {
+		return squareOnThirdAttempt()
 	})
+	if err != nil {
+		// TODO: handle error
+	}
 	fmt.Println(result)
 	// Output: 9
 }

@@ -75,7 +75,7 @@ type Backoff struct {
 //
 // This function makes use of closures so any variables you would like to capture should be declared outside the
 // invocation of this method.
-func It(ctx context.Context, b *Backoff, fn func(context.Context) error) (err error) {
+func It[T any](ctx context.Context, b *Backoff, fn func(context.Context) (T, error)) (val T, err error) {
 	b.mutex.Do(b.validateAndFreeze)
 
 	delay := b.initialDelay
@@ -83,7 +83,7 @@ func It(ctx context.Context, b *Backoff, fn func(context.Context) error) (err er
 		if i != 0 {
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
+				return val, ctx.Err()
 			case <-time.After(delay):
 			}
 
@@ -98,12 +98,15 @@ func It(ctx context.Context, b *Backoff, fn func(context.Context) error) (err er
 				delay = time.Duration(minDelay + (rand.Float64() * (maxDelay - minDelay + 1)))
 			}
 		}
-		err = fn(ctx)
+		val, err = fn(ctx)
 		if err == nil {
-			return
+			return val, nil
+		}
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return val, err
 		}
 	}
-	return
+	return val, err
 }
 
 func (b *Backoff) validateAndFreeze() {
@@ -135,8 +138,15 @@ func (b *Backoff) validateAndFreeze() {
 	b.factor = b.Factor
 	b.jitter = b.Jitter
 }
+// Run is a convenience function for when the calling function only needs to return an error.
+func Run(ctx context.Context, b *Backoff, fn func(context.Context) error) error {
+	_, err := It(ctx, b, func(ctx context.Context) (struct{}, error) {
+		return struct{}{}, fn(ctx)
+	})
+	return err
+}
 
-// It is a convenience method to call the package level function It.
-func (b *Backoff) It(ctx context.Context, fn func(context.Context) error) (err error) {
-	return It(ctx, b, fn)
+// Run is a convenience method for when the calling function only needs to return an error.
+func (b *Backoff) Run(ctx context.Context, fn func(context.Context) error) error {
+	return Run(ctx, b, fn)
 }

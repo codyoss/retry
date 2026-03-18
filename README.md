@@ -3,7 +3,7 @@
 retry is a package that enables retrying code.
 
 [![GoDoc](https://godoc.org/github.com/codyoss/retry?status.svg)](https://godoc.org/github.com/codyoss/retry)
-[![Build Status](https://cloud.drone.io/api/badges/codyoss/retry/status.svg)](https://cloud.drone.io/codyoss/retry)
+[![Build Status](https://github.com/codyoss/retry/actions/workflows/ci.yml/badge.svg)](https://github.com/codyoss/retry/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/codyoss/retry/branch/master/graph/badge.svg)](https://codecov.io/gh/codyoss/retry)
 [![Go Report Card](https://goreportcard.com/badge/github.com/codyoss/retry)](https://goreportcard.com/report/github.com/codyoss/retry)
 
@@ -27,44 +27,31 @@ go get github.com/codyoss/retry
 An example calling a function that does not return an error:
 
 ```go
-var result int
-retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (err error) {
-    result = squareOnThirdAttempt()
-    if result == 0 {
-        return retry.Me
+result, err := retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (int, error) {
+    res := squareOnThirdAttempt()
+    if res == 0 {
+        return 0, retry.Me
     }
-    return
+    return res, nil
 })
+if err != nil {
+    // TODO: handle error
+}
 fmt.Println(result)
 //Output: 9
 ```
 
-An alternate syntax that does the same thing as above:
-
-```go
-var result int
-// You could also create your own backoff policy
-backoff := retry.ExponentialBackoff
-// This just calls the package level It function under the hood.
-backoff.It(context.Background(), func(ctx context.Context) (err error) {
-    result = squareOnThirdAttempt()
-    if result == 0 {
-        return retry.Me
-    }
-    return
-})
-fmt.Println(result)
-//Output: 9
-```
+// Removed the backoff method example since it was removed from the API to support generics.
 
 An example calling a function that returns an error:
 
 ```go
-var result int
-retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (err error) {
-    result, err = squareOnThirdAttempt()
-    return
+result, err := retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (int, error) {
+    return squareOnThirdAttempt()
 })
+if err != nil {
+    // TODO: handle error
+}
 fmt.Println(result)
 // Output: 9
 ```
@@ -80,11 +67,13 @@ b := &retry.ExponentialBackoff{
 attempt := 0
 
 // final error will be returned if retries are exceeded
-err := retry.It(context.Background(), b, func(ctx context.Context) error {
+err := backoff.Run(context.Background(), func(ctx context.Context) error {
     attempt++
-    return fmt.Errorf("I failed %d times 😢", attempt)
+    return fmt.Errorf("I failed %d times \U0001f622", attempt)
 })
-fmt.Println(err)
+if err != nil {
+    // TODO: handle error
+}
 // Output: I failed 5 times 😢
 ```
 
@@ -98,7 +87,7 @@ ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 defer cancel()
 
 // the context passed in is forwarded to the function provided
-err := retry.It(ctx, retry.ConstantDelay, func(ctx context.Context) (err error) {
+err := retry.Run(ctx, retry.ConstantDelay, func(ctx context.Context) error {
     noopFn(ctx)
     return retry.Me
 })
@@ -108,7 +97,3 @@ fmt.Printf("%v\n", err)
 ```
 
 For full examples with more documentation see [the examples folder](examples/)
-
-## Disclaimer
-
-Until this api hits v0.1.0 it might change a bit. After that I will try to keep things rather stable. After I have gotten enough feedback I will v1.0.0 and make the same promise Go does. Cheers!

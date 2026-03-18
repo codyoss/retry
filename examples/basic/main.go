@@ -21,16 +21,18 @@ func squareOnThirdAttemptGenerator() func() int {
 func main() {
 	squareOnThirdAttempt := squareOnThirdAttemptGenerator()
 
-	var result int
-	retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (err error) {
+	result, err := retry.It(context.Background(), retry.ExponentialBackoff, func(ctx context.Context) (int, error) {
 		// Put code you would like to retry here. If you return an error and have not exceeded retries the code in
 		// in this block will be executed again based on the backoff policy provided.
-		result = squareOnThirdAttempt()
-		if result == 0 {
-			return retry.Me
+		res := squareOnThirdAttempt()
+		if res == 0 {
+			return 0, retry.Me
 		}
-		return
+		return res, nil
 	})
+	if err != nil {
+		// TODO: handle error
+	}
 	fmt.Println(result)
 	// Output: 9
 }

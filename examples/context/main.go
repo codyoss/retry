@@ -15,8 +15,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
-	err := retry.It(ctx, retry.ConstantDelay, func(ctx context.Context) (err error) {
-		// The context that is provided to `retry.ItContext` is passed into this function so you may call your context
+	err := retry.Run(ctx, retry.ConstantDelay, func(ctx context.Context) error {
+		// The context that is provided to it is passed into this function so you may call your context
 		// aware code and have it tied to your parent context
 		noopFn(ctx)
 		return retry.Me

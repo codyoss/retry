@@ -25,7 +25,7 @@ func main() {
 	failingCode := failingCodeGenerator()
 
 	// final error will be returned if retries are exceeded
-	err := backoff.It(context.Background(), func(ctx context.Context) error {
+	err := backoff.Run(context.Background(), func(ctx context.Context) error {
 		return failingCode()
 	})
 	fmt.Println(err)
